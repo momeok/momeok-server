@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+    db:
+        image: mysql:8.0
+        container_name: momeok-mysql
+        ports:
+            - "${DB_PORT:-3306}:3306"
+        environment:
+            MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+            MYSQL_DATABASE: ${DB_NAME:-momeok_db}
+            TZ: Asia/Seoul
+        volumes:
+            - mysql_data:/var/lib/mysql
+        command:
+            - --character-set-server=utf8mb4
+            - --collation-server=utf8mb4_unicode_ci
+
+    redis:
+        image: redis:alpine
+        container_name: momeok-redis
+        ports:
+            - "${REDIS_PORT:-6379}:6379"
+        volumes:
+            - redis_data:/data
+        command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+
+volumes:
+    mysql_data:
+    redis_data:
