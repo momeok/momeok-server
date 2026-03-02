@@ -11,6 +11,9 @@ services:
             TZ: Asia/Seoul
         volumes:
             - mysql_data:/var/lib/mysql
+        command:
+            - --character-set-server=utf8mb4
+            - --collation-server=utf8mb4_unicode_ci
         healthcheck:
             test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD}"]
             interval: 10s
@@ -23,6 +26,7 @@ services:
         restart: always
         volumes:
             - redis_data:/data
+        command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
         healthcheck:
             test: [ "CMD", "redis-cli", "ping" ]
             interval: 5s
@@ -30,7 +34,7 @@ services:
             retries: 5
 
     server:
-        image: infreej/momeok-server:latest
+        image: ${DOCKER_USERNAME}/momeok-server:${IMAGE_TAG:-latest}
         container_name: momeok-server
         ports:
             - "80:8080"
