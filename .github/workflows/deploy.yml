@@ -37,13 +37,13 @@ jobs:
                       ${{secrets.DOCKER_USERNAME}}/momeok-server:latest
                       ${{secrets.DOCKER_USERNAME}}/momeok-server:${{github.sha}}
 
-            - name: Copy docker-compose to Server
+            - name: Copy files to Server
               uses: appleboy/scp-actions@v0.1.4
               with:
                   host: ${{secrets.AWS_HOST}}
                   username: ubuntu
                   key: ${{secrets.AWS_SSH_KEY}}
-                  source: "docker-compose.prod.yml"
+                  source: "docker-compose.app.yml,nginx/default.conf"
                   target: "/home/ubuntu/momeok"
 
             - name: Deploy to AWS Lightsail
@@ -55,7 +55,8 @@ jobs:
                   script: |
                       cd /home/ubuntu/momeok
                       
-                      echo "DB_ROOT_PASSWORD=${{secrets.DB_ROOT_PASSWORD}}" > .env
+                      echo "DB_HOST=${{secrets.DB_HOST}}" > .env
+                      echo "DB_ROOT_PASSWORD=${{secrets.DB_ROOT_PASSWORD}}" >> .env
                       echo "DB_NAME=${{ secrets.DB_NAME }}" >> .env
                       echo "DB_PORT=3306" >> .env
                       echo "REDIS_PORT=6379" >> .env
@@ -64,8 +65,8 @@ jobs:
                       echo "DOCKER_USERNAME=${{secrets.DOCKER_USERNAME}}" >> .env
                       
                       docker pull ${{secrets.DOCKER_USERNAME}}/momeok-server:${{github.sha}}
-                      docker-compose -f docker-compose.prod.yml down
-                      docker-compose -f docker-compose.prod.yml up -d
+                      docker-compose -f docker-compose.app.yml down
+                      docker-compose -f docker-compose.app.yml up -d
                       
                       docker images -q ${{secrets.DOCKER_USERNAME}}/momeok-server | uniq | tail -n +4 | xargs -r docker rmi
                       docker image prune -f
